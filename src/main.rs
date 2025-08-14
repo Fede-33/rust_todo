@@ -1,87 +1,68 @@
 use std::io;
 
-struct Tarea {
-    descripcion: String,
-    completada: bool,
+struct Task {
+    description: String,
+    done: bool
 }
 
-impl Tarea {
-    fn mostrar(&self, id: usize) {
-        let estado = if self.completada { "[X]" } else { "[ ]" };
-        println!("{} {}: {}",estado, id, self.descripcion);
+impl Task {
+    fn format_task(&self, id:usize){
+        let status = if self.done{"[X]"} else {"[ ]"};
+        println!("{} {}: {}", status, id, self.description);
+    }
+}
+
+fn list_tasks(list: &Vec<Task> ) {
+    println!("\n LISTA DE TAREAS:");
+    for (i, item) in list.iter().enumerate() {
+        item.format_task (i+1);
     }
 }
 
 fn main() {
-    println!("Bienvenido al gestor de tareas");
+    println!("---GESTOR DE TAREAS---");
 
-    let mut tareas: Vec<Tarea> = Vec::new();
+    let mut tasks: Vec<Task> = Vec::new();
 
     loop {
-        println!("\ningresa un comando('agregar <descripcion>', 'listar','salir')");
+        println!("\nIngrese un comando: ");
+        println!("agregar <descripción> / completar <id>  / listar / salir");
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Inténtelo nuevamente.");
+        let input = input.trim();
 
-        let mut entrada = String::new();
-        io::stdin()
-            .read_line(&mut entrada)
-            .expect("Error al leer la entrada");
-        let entrada = entrada.trim();
-
-        if entrada == "salir" {
-            println!("\nSaliendo del gestor de tareas");
+        if input == "salir"{
+            println!("\n---FINALIZANDO GESTOR---");
             break;
-        } else if entrada.starts_with("agregar ") {
-            let descripcion = entrada[8..].trim();
-            if !descripcion.is_empty() {
-                tareas.push(Tarea {
-                    descripcion: descripcion.to_string(),
-                    completada: false,
+        }else if input.starts_with("agregar") {
+            let description = input[7..].trim().to_string();
+            if !description.is_empty() {
+                tasks.push(Task{
+                    description: description.to_string(),
+                    done: false
                 });
-                println!("\nTarea agregada: {}", descripcion);
-            } else {
-                println!("\nLa descripción de la tarea no puede estar vacía.");
+                println!("\nTarea agregada: {}", description);
+            }else {
+                println!("La descripción no puede estar vacía.")
             }
-        } else if entrada == "listar" {
-            listar_tareas(&tareas);
-        } else if entrada.starts_with("completar ") {
-            let id: usize = match entrada[10..].trim().parse() {
-                Ok(num) => num,
-                Err(_) => {
-                    println!("\nID inválido. Debe ser un número.");
+        } else if input == "listar"{
+            list_tasks(&tasks);
+        }else if input.starts_with("completar") {
+            let id: usize = match input[9..].trim().parse(){
+                Ok(num)=> num,
+                Err(_) =>{
+                    println!("\nID no válido.");
                     continue;
                 }
             };
-            if id > 0 && id <= tareas.len() {
-                tareas[id - 1].completada = true;
-                println!("\nTarea {} marcada como completada.", id);
-            } else {
-                println!("\nID de tarea no válido.");
+            if id > 0 && id <= tasks.len() {
+                tasks[id-1].done = true;
+                println!("\nTarea {} completada:\n{}.", id, tasks[id-1].description);
+            } else{
+                println!("\nID no válido.");
             }
-        } else {
-            println!("\nComando no reconocido. Intenta de nuevo.");
+        }else {
+            println!("Comando no reconocido. Inténtelo otra vez.\n")
         }
-
     }
 }
-
-fn listar_tareas(lista_de_tareas: &Vec<Tarea>) {
-    println!("\nLista de Tareas:");
-    
-    for (i, tarea) in lista_de_tareas.iter().enumerate() {
-        tarea.mostrar(i + 1);
-    }
-}
-
-/* 
-    Desafio uno:
-        Refactorizar el codigo con un match en vez de if, else if, else
-    
-    Desafio dos:
-        Guardar las tareas en un archivo
-
-    Desafio tres:
-        Investigar el crate serde y como se usaria para serializar y deserializar las tareas
-    
-    Desafio cuatro:
-        Cargar las tareas desde un archivo al iniciar el programa 
-
- */
